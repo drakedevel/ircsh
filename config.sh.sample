@@ -1,0 +1,47 @@
+# Global bot parameters
+declare -r pServer="irc.freenode.net"
+declare -r pPort=6667
+declare -r pNick="ircsh${RANDOM}"
+declare -r pUser="ircsh"
+declare -r pRealname="IRC Shell Script Bot"
+declare -r pPassword=""
+
+# Local parameters
+declare -r pChannel="##ircsh"
+
+# Callbacks
+function onStartup() {
+    sendToServer JOIN "$pChannel"
+}
+
+function onUnknown() {
+    echo "Unknown message: " "$@"
+}
+
+function onNOTICE() {
+    return 0
+}
+
+function onPRIVMSG() {
+    [[ $# -ne 6 ]] && return
+    local nick="$1"
+    local target="$5"
+    local message="$6"
+
+    # Only respond to "hello", ignoring the identified +/- prefix
+    if [[ "${message:1:5}" != "hello" ]]; then
+        return 0
+    fi
+
+    # Figure out where the response should go, and who to highlight
+    prefix=
+    responsetarget=
+    if [[ "${target::1}" == "#" ]]; then
+        responsetarget="$target"
+        prefix="${nick}: "
+    else
+        responsetarget="$nick"
+    fi
+
+    sendToServer PRIVMSG "$responsetarget" "${prefix}Hello!"
+}
